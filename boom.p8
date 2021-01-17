@@ -9,13 +9,16 @@ __lua__
 
 local upd
 local p
+local t
 
 function _init()
 	p=make_player()
 	upd=update_game
+	t=0
 end
 
 function _update60()
+	t+=1
 	upd()
 end
 
@@ -30,53 +33,51 @@ function _draw()
 end
 -->8
 --player
+local dirx={-1,1,0,0}
+local diry={0,0,-1,1}
+
 function make_player()
  return {
 		x=1,
 		y=1,
-		t=0,
+		pt=1,
 		d=3, --direction
 		ox=0,
 		oy=0,
 		walking=false,
 		dir_sprs={96,112,64,80},
 		update=function(self)
-			self.t+=1
-			if self.ox > 0 then
-				self.ox-=1
-			elseif self.ox < 0 then
-				self.ox+=1
-			elseif self.oy > 0 then
-				self.oy-=1
-			elseif self.oy < 0 then
-				self.oy+=1
+			if self.pt < 1 then
+			 -- transitioning b/t tiles
+				self.pt=min(self.pt+0.15,1)
+				self.ox=self.sox*(1-self.pt)
+				self.oy=self.soy*(1-self.pt)
 			else
 				self.walking=true
-				if btnp(0) then
-					self.x-=1
-					self.ox=8
-					self.d=0
-				elseif btnp(1) then
-					self.x+=1
-					self.ox=-8
-					self.d=1
-				elseif btnp(2) then
-					self.y-=1
-					self.oy=8
-					self.d=2
-				elseif btnp(3) then
-					self.y+=1
-					self.oy=-8
-					self.d=3
-				else
-					self.walking=false
+				self:handle_input()
+			end
+		end,
+		handle_input=function(self)
+			for i=0,3 do
+				if btnp(i) then
+					local dx,dy=dirx[i+1],diry[i+1]
+				
+					self.x+=dx
+					self.y+=dy
+					self.sox=-dx*8
+					self.soy=-dy*8
+					self.ox=self.sox
+					self.oy=self.soy
+					self.d=i
+					self.pt=0
+					return
 				end
 			end
 		end,
 		draw=function(self)
 			palt(0, false)
 			palt(4, true)
-			local sprite=self.dir_sprs[self.d+1]+flr(self.t/8)%4+1
+			local sprite=self.dir_sprs[self.d+1]+flr(t/8)%4+1
 			spr(sprite,self.x*8+self.ox,self.y*8+self.oy)
 			pal()
 		end
