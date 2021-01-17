@@ -40,19 +40,33 @@ function make_player()
  return {
 		x=1,
 		y=1,
-		pt=1,
+		t=1,
 		d=3, --direction
 		ox=0,
 		oy=0,
+		mov=nil, --movement function
 		dir_sprs={96,112,64,80},
 		update=function(self)
-			if self.pt < 1 then
+			if self.t < 1 then
 			 -- transitioning b/t tiles
-				self.pt=min(self.pt+0.15,1)
-				self.ox=self.sox*(1-self.pt)
-				self.oy=self.soy*(1-self.pt)
+				self.t=min(self.t+0.15,1)
+
+				p:mov()
 			else
 				self:handle_input()
+			end
+		end,
+		mov_walk=function(self)
+				self.ox=self.sox*(1-self.t)
+				self.oy=self.soy*(1-self.t)
+		end,
+		mov_bump=function(self)
+			if self.t < 0.5 then
+				self.ox=self.sox*(self.t)
+				self.oy=self.soy*(self.t)
+			else
+				self.ox=self.sox*(1-self.t)
+				self.oy=self.soy*(1-self.t)
 			end
 		end,
 		handle_input=function(self)
@@ -64,14 +78,19 @@ function make_player()
 					local destx,desty=self.x+dx,self.y+dy
 					local tile=mget(destx,desty)
 					if fget(tile, 0) then
-						-- can't walk through this
+						-- impassable
+						
+						self.mov=self.mov_bump
+						self.sox,self.soy=dx*8,dy*8
+						self.ox,self.oy=0,0
+						self.t=0
 					else
+						self.mov=self.mov_walk
 						self.x+=dx
 						self.y+=dy
-						self.sox=-dx*8
-						self.soy=-dy*8
+						self.sox,self.soy=-dx*8,-dy*8
 						self.ox,self.oy=self.sox,self.soy
-						self.pt=0
+						self.t=0
 						return
 					end
 				end
