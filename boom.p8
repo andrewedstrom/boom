@@ -61,13 +61,12 @@ function make_player()
 				self.oy=self.soy*(1-self.t)
 		end,
 		mov_bump=function(self)
-			if self.t < 0.5 then
-				self.ox=self.sox*(self.t)
-				self.oy=self.soy*(self.t)
-			else
-				self.ox=self.sox*(1-self.t)
-				self.oy=self.soy*(1-self.t)
+			local mult=self.t
+			if mult > 0.5 then
+				mult=1-mult
 			end
+			self.ox=self.sox*mult
+			self.oy=self.soy*mult
 		end,
 		handle_input=function(self)
 			for i=0,3 do
@@ -77,21 +76,19 @@ function make_player()
 
 					local destx,desty=self.x+dx,self.y+dy
 					local tile=mget(destx,desty)
+				 self.t=0
 					if fget(tile, 0) then
 						-- impassable
-						
+	
 						self.mov=self.mov_bump
 						self.sox,self.soy=dx*8,dy*8
 						self.ox,self.oy=0,0
-						self.t=0
 					else
 						self.mov=self.mov_walk
 						self.x+=dx
 						self.y+=dy
 						self.sox,self.soy=-dx*8,-dy*8
 						self.ox,self.oy=self.sox,self.soy
-						self.t=0
-						return
 					end
 				end
 			end
