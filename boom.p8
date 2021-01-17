@@ -76,8 +76,7 @@ function make_player()
 		draw=function(self)
 			palt(0, false)
 			palt(4, true)
-			local ani_offset=flr(self.t/8)%4+1
-			local sprite=self.dir_sprs[self.d+1]+ani_offset
+			local sprite=self.dir_sprs[self.d+1]+flr(self.t/8)%4+1
 			spr(sprite,self.x*8+self.ox,self.y*8+self.oy)
 			pal()
 		end
