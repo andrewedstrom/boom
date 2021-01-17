@@ -7,12 +7,13 @@ __lua__
 -- todo
 -- bombs
 
-local upd
-local p
+local upd -- current update function
 local t
+local game_objects
 
 function _init()
-	p=make_player()
+	game_objects={}
+	make_player()
 	upd=update_game
 	t=0
 end
@@ -23,13 +24,17 @@ function _update60()
 end
 
 function update_game()
-	p:update()
+	for obj in all(game_objects) do
+		obj:update()
+	end
 end
 
 function _draw()
 	cls()
 	map()
-	p:draw()
+	for obj in all(game_objects) do
+		obj:draw()
+	end
 end
 -->8
 --player
@@ -37,9 +42,7 @@ local dirx={-1,1,0,0}
 local diry={0,0,-1,1}
 
 function make_player()
- return {
-		x=1,
-		y=1,
+ make_game_object("player",1,1,{
 		t=1,
 		d=3, --direction
 		ox=0,
@@ -51,7 +54,7 @@ function make_player()
 			 -- transitioning b/t tiles
 				self.t=min(self.t+0.15,1)
 
-				p:mov()
+				self:mov()
 			else
 				self:handle_input()
 			end
@@ -100,10 +103,29 @@ function make_player()
 			spr(sprite,self.x*8+self.ox,self.y*8+self.oy)
 			pal()
 		end
-	}
+	})
 end
 -->8
---bombs
+--objects
+
+function make_game_object(kind,x,y,props)
+	local obj={
+		kind=kind,
+		x=x,
+		y=y,
+		draw=function(self)
+		end,
+		update=function(self)
+		end
+	}
+	
+ -- add aditional object properties
+ for k,v in pairs(props) do
+ 	obj[k] = v
+ end
+
+ add(game_objects, obj)
+end
 __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
