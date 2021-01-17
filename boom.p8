@@ -44,7 +44,6 @@ function make_player()
 		d=3, --direction
 		ox=0,
 		oy=0,
-		walking=false,
 		dir_sprs={96,112,64,80},
 		update=function(self)
 			if self.pt < 1 then
@@ -53,24 +52,28 @@ function make_player()
 				self.ox=self.sox*(1-self.pt)
 				self.oy=self.soy*(1-self.pt)
 			else
-				self.walking=true
 				self:handle_input()
 			end
 		end,
 		handle_input=function(self)
 			for i=0,3 do
 				if btnp(i) then
-					local dx,dy=dirx[i+1],diry[i+1]
-				
-					self.x+=dx
-					self.y+=dy
-					self.sox=-dx*8
-					self.soy=-dy*8
-					self.ox=self.sox
-					self.oy=self.soy
 					self.d=i
-					self.pt=0
-					return
+					local dx,dy=dirx[i+1],diry[i+1]
+
+					local destx,desty=self.x+dx,self.y+dy
+					local tile=mget(destx,desty)
+					if fget(tile, 0) then
+						-- can't walk through this
+					else
+						self.x+=dx
+						self.y+=dy
+						self.sox=-dx*8
+						self.soy=-dy*8
+						self.ox,self.oy=self.sox,self.soy
+						self.pt=0
+						return
+					end
 				end
 			end
 		end,
