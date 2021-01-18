@@ -148,7 +148,7 @@ function make_bomb(x,y)
 			if self.ttl > 0 then
 				
 				palt(0,false)
-				palt(6,true)
+				palt(4,true)
 				local sprite=89
 				if self.ttl < 50 then
 					sprite=self.ani[flr(t/7)%2+1]
