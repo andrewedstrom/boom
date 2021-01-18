@@ -178,18 +178,64 @@ function make_bomb(x,y)
 end
 
 function explode(x,y,range)
+	local lc,uc,rc,dc = true,true,true,true --continue flags
 	--center
 	new_explosion_cell("center",x,y)
+	local destx,desty,res
 	for i=1,range do
+		local is_end = i==range
 	 --left
-	 new_explosion_cell("horiz",x-1,y,i==range,true,false)
+	 if lc then
+	 	destx,desty=x-1,y
+	 	res = explode_at(destx,desty)
+	 	if res > 0 then 
+		 	new_explosion_cell("horiz",destx,desty,is_end,true,false)
+			end
+			lc = res > 1
+		end	
 		--right
-		new_explosion_cell("horiz",x+1,y,i==range,false,false)
+		if rc then
+			destx,desty=x+1,y
+			res = explode_at(destx,desty)
+	 	if res > 0 then 
+				new_explosion_cell("horiz",destx,desty,is_end,false,false)
+			end
+			rc = res > 1
+		end
 		--up
-		new_explosion_cell("vert",x,y-1,i==range,false,false)
+		if uc then
+			destx,desty=x,y-1
+			res = explode_at(destx,desty)
+	 	if res > 0 then 
+				new_explosion_cell("vert",destx,desty,is_end,false,false)
+			end
+			uc = res > 1
+		end
 		--down
-		new_explosion_cell("vert",x,y+1,i==range,false,true)
+		if dc then
+			destx,desty=x,y+1
+			res = explode_at(destx,desty)
+	 	if res > 0 then 
+				new_explosion_cell("vert",destx,desty,is_end,false,true)
+			end
+			dc = res > 1
+		end
 	end
+end
+
+function explode_at(x,y)
+	local cell = mget(x,y)
+	if fget(cell,1) then
+		--hit something that can break	
+		
+		-- todo blow it up!
+		return 1
+	elseif fget(cell,0) then
+		-- hit something that can't be broken
+		return 0
+	end
+	-- haven't hit anything
+	return 2
 end
 
 function new_explosion_cell(direc,x,y,is_end,flipx,flipy)
@@ -287,7 +333,7 @@ __gfx__
 44439344445933d44453934444d3395444d393440000000099999490494949490444999949494994999994094049499400000000000000000000000000000000
 4444ddd444454d444445dd44444d4544444d55440000000044444440000000000994444449494994444444400949499400000000000000000000000000000000
 __gff__
-0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001010000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000101010100000000000000000000000001010101010101010000
+0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001010000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000301010100000000000000000000000001010101010101010000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __map__
 7a77777777777777777777777777777b00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
