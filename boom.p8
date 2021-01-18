@@ -179,16 +179,35 @@ end
 
 function explode(x,y,range)
 	--center
-	explosion_at(x,y)
+	new_explosion_cell("center",x,y)
+	for i=1,range do
+	 --left
+	 new_explosion_cell("horiz",x-1,y,i==range,true,false)
+		--right
+		new_explosion_cell("horiz",x+1,y,i==range,false,false)
+		--up
+		new_explosion_cell("vert",x,y-1,i==range,false,false)
+		--down
+		new_explosion_cell("vert",x,y+1,i==range,false,true)
+	end
 end
 
-function explosion_at(x,y)
-	local center_ani={1,2,3,4,4,4,3,2,1}
+function new_explosion_cell(direc,x,y,is_end,flipx,flipy)
+	local center_ani={1,2,3,4,3,2,1}
+	local horiz_ani={33,34,35,36,35,34,33}
+	local vert_ani={49,50,51,52,51,50,49}
 	local ani = center_ani
+	if direc == "horiz" then
+		ani = horiz_ani
+	elseif direc== "vert" then
+		ani = vert_ani
+	end
 	make_game_object("explosion",x,y,{
 		t=0,
 		lifetime=30,
 		ani=ani,
+		flipx=flipx,
+		flipy=flipy,
 		is_expired=function(self)
 			return self.t >= self.lifetime 
 		end,
@@ -198,7 +217,7 @@ function explosion_at(x,y)
 		draw = function(self)
 			local frame_len=self.lifetime/#self.ani
 			local sprite = self.ani[flr(self.t/frame_len)+1]
-			spr(sprite,self.x*8,self.y*8)
+			spr(sprite,self.x*8,self.y*8,1,1,self.flipx,self.flipy)
 		end
 	})
 end
