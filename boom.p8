@@ -9,11 +9,12 @@ __lua__
 
 local upd -- current update function
 local t
+local p
 local game_objects
 
 function _init()
 	game_objects={}
-	make_player()
+	p=make_player()
 	upd=update_game
 	t=0
 end
@@ -27,6 +28,7 @@ function update_game()
 	for obj in all(game_objects) do
 		obj:update()
 	end
+	p:update()
 end
 
 function _draw()
@@ -35,6 +37,7 @@ function _draw()
 	for obj in all(game_objects) do
 		obj:draw()
 	end
+	p:draw()
 end
 -->8
 --player
@@ -42,14 +45,18 @@ local dirx={-1,1,0,0}
 local diry={0,0,-1,1}
 
 function make_player()
- make_game_object("player",1,1,{
+ return make_game_object("player",1,1,{
 		t=1,
-		d=3, --direction
+		d=3, -- direction
 		ox=0,
 		oy=0,
-		mov=nil, --movement function
+		mov=nil, -- movement function
 		dir_sprs={96,112,64,80},
+		input_buff=-1,
 		update=function(self)
+			if btnp(4) or btnp(5) then
+				make_bomb(self.x,self.y)
+			end
 			if self.t < 1 then
 			 -- transitioning b/t tiles
 				self.t=min(self.t+0.15,1)
@@ -82,7 +89,7 @@ function make_player()
 				 self.t=0
 					if fget(tile, 0) then
 						-- impassable
-	
+						sfx(0)
 						self.mov=self.mov_bump
 						self.sox,self.soy=dx*8,dy*8
 						self.ox,self.oy=0,0
@@ -125,6 +132,33 @@ function make_game_object(kind,x,y,props)
  end
 
  add(game_objects, obj)
+ return obj
+end
+-->8
+--bombs
+
+function make_bomb(x,y)
+	make_game_object("bomb", x, y, {
+		ani={88, 89},
+		ttl=120,
+		update=function(self)
+			self.ttl-=1
+		end,
+		draw=function(self)
+			if self.ttl > 0 then
+				
+				palt(0,false)
+				palt(6,true)
+				local sprite=89
+				if self.ttl < 50 then
+					sprite=self.ani[flr(t/7)%2+1]
+				end
+	
+				spr(sprite,x*8,y*8)
+				pal()
+			end
+		end
+	})
 end
 __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -211,3 +245,5 @@ __map__
 7656566656566656565656665656667800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 7656465646564666466646564666667800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 7b79797979797979797979797979797a00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+__sfx__
+01010000227501b75019050180001a000007000070000700007000070000700007000070000700007000070000700007000070000700007000070000700007000070000700007000070000700007000070000700
