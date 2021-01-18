@@ -157,7 +157,7 @@ function make_bomb(x,y)
 		update=function(self)
 			self.ttl-=1
 			if self.ttl == 0 then
-				explode(x,y,1) --todo make bigger
+				explode(x,y,4)
 			end
 		end,
 		is_expired=function(self)
@@ -186,37 +186,37 @@ function explode(x,y,range)
 		local is_end = i==range
 	 --left
 	 if lc then
-	 	destx,desty=x-1,y
+	 	destx,desty=x-i,y
 	 	res = explode_at(destx,desty)
-	 	if res > 0 then 
-		 	new_explosion_cell("horiz",destx,desty,is_end,true,false)
+	 	if res > 0 then
+		 	new_explosion_cell("horiz",destx,desty,is_end or res==1,true,false)
 			end
 			lc = res > 1
 		end	
 		--right
 		if rc then
-			destx,desty=x+1,y
+			destx,desty=x+i,y
 			res = explode_at(destx,desty)
 	 	if res > 0 then 
-				new_explosion_cell("horiz",destx,desty,is_end,false,false)
+				new_explosion_cell("horiz",destx,desty,is_end or res==1,false,false)
 			end
 			rc = res > 1
 		end
 		--up
 		if uc then
-			destx,desty=x,y-1
+			destx,desty=x,y-i
 			res = explode_at(destx,desty)
 	 	if res > 0 then 
-				new_explosion_cell("vert",destx,desty,is_end,false,false)
+				new_explosion_cell("vert",destx,desty,is_end or res==1,false,false)
 			end
 			uc = res > 1
 		end
 		--down
 		if dc then
-			destx,desty=x,y+1
+			destx,desty=x,y+i
 			res = explode_at(destx,desty)
 	 	if res > 0 then 
-				new_explosion_cell("vert",destx,desty,is_end,false,true)
+				new_explosion_cell("vert",destx,desty,is_end or res==1,false,true)
 			end
 			dc = res > 1
 		end
@@ -240,13 +240,15 @@ end
 
 function new_explosion_cell(direc,x,y,is_end,flipx,flipy)
 	local center_ani={1,2,3,4,3,2,1}
-	local horiz_ani={33,34,35,36,35,34,33}
-	local vert_ani={49,50,51,52,51,50,49}
+	local horiz_ani={17,18,19,20,19,18,17}
+	local end_horiz_ani={33,34,35,36,35,34,33}
+	local vert_ani={8,7,6,5,6,7,8}
+	local end_vert_ani={49,50,51,52,51,50,49}
 	local ani = center_ani
 	if direc == "horiz" then
-		ani = horiz_ani
+		ani = is_end and end_horiz_ani or horiz_ani
 	elseif direc== "vert" then
-		ani = vert_ani
+		ani = is_end and end_vert_ani or vert_ani
 	end
 	make_game_object("explosion",x,y,{
 		t=0,
