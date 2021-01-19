@@ -161,7 +161,7 @@ function make_bomb(x,y)
 		update=function(self)
 			self.ttl-=1
 			if self.ttl == 0 then
-				explode(x,y,4,self.channel)
+				explode(x,y,3,self.channel)
 			end
 		end,
 		is_expired=function(self)
@@ -255,7 +255,7 @@ function map_destruction(x,y,map_tile)
 	make_game_object("destruction",x,y,{
 		ani=ani,
 		t=0,
-		lifetime=40,
+		lifetime=50,
 		update=function(self)
 			local frame_len=self.lifetime/#self.ani
 			mset(x,y,self.ani[flr(self.t/frame_len)+1])
