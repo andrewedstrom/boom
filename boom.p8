@@ -236,8 +236,7 @@ function explode_at(x,y)
 	local cell = mget(x,y)
 	if fget(cell,1) then
 		--hit something that can break
-		
-		-- todo blow it up!
+		map_destruction(x,y,cell)
 		return 1
 	elseif fget(cell,0) then
 		-- hit something that can't be broken
@@ -245,6 +244,27 @@ function explode_at(x,y)
 	end
 	-- haven't hit anything
 	return 2
+end
+
+function map_destruction(x,y,map_tile)
+	local ani
+	if map_tile == 102 then
+		-- purple boulder
+		ani={102,103,104,105,86}
+	end
+	make_game_object("destruction",x,y,{
+		ani=ani,
+		t=0,
+		lifetime=40,
+		update=function(self)
+			local frame_len=self.lifetime/#self.ani
+			mset(x,y,self.ani[flr(self.t/frame_len)+1])
+			self.t+=1
+		end,
+		is_expired=function(self)
+			return self.t >= self.lifetime 
+		end
+	})
 end
 
 function new_explosion_cell(direc,x,y,is_end,flipx,flipy)
