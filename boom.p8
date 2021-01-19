@@ -4,7 +4,7 @@ __lua__
 -- boom
 -- by andrew edstrom
 
--- explosion effects adapted from manbomber
+-- explosion graphics adapted from manbomber
 -- by Max Pellegrino and Dominik Leiser
 -- https://www.lexaloffle.com/bbs/?pid=86298#p
 
@@ -12,6 +12,7 @@ __lua__
 -- destructable env
 -- limit bombs
 -- nonoverlapping bomb sfx
+-- particles on bombs
 
 local upd -- current update function
 local t
@@ -234,7 +235,7 @@ end
 function explode_at(x,y)
 	local cell = mget(x,y)
 	if fget(cell,1) then
-		--hit something that can break	
+		--hit something that can break
 		
 		-- todo blow it up!
 		return 1
