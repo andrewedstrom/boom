@@ -117,6 +117,7 @@ function make_player()
 						self.sox,self.soy=-dx*8,-dy*8
 						self.ox,self.oy=self.sox,self.soy
 					end
+					return
 				end
 			end
 		end,
@@ -160,6 +161,14 @@ function animate(start)
 	return start+flr(t/8)%4
 end
 
+function foreach_game_object_of_kind(kind, callback)
+ local obj
+ for obj in all(game_objects) do
+  if obj.kind == kind then
+   callback(obj)
+  end
+ end
+end
 -->8
 --bombs
 
@@ -173,8 +182,13 @@ function make_bomb(x,y)
 		update=function(self)
 			self.ttl-=1
 			if self.ttl == 0 then
-				explode(x,y,3,self.channel)
+				self:explode()
 			end
+		end,
+		explode=function(self)
+			self.ttl=0
+			del(game_objects, self)
+			explode(x,y,3,self.channel)
 		end,
 		is_expired=function(self)
 			return self.ttl <= 0
@@ -245,6 +259,12 @@ function explode(x,y,range,sfx_channel)
 end
 
 function explode_at(x,y)
+	local bomb=bomb_at(x,y)
+	if bomb then
+		bomb:explode()
+		return 0
+	end
+
 	local cell = mget(x,y)
 	if fget(cell,1) then
 		--hit something that can break
@@ -279,7 +299,6 @@ function map_destruction(x,y,map_tile)
 	})
 end
 
-
 function new_explosion_cell(direc,x,y,is_end,flipx,flipy)
 	local center_ani={1,2,3,4,3,2,1}
 	local horiz_ani={17,18,19,20,19,18,17}
@@ -310,6 +329,16 @@ function new_explosion_cell(direc,x,y,is_end,flipx,flipy)
 			spr(sprite,self.x*8,self.y*8,1,1,self.flipx,self.flipy)
 		end
 	})
+end
+
+function bomb_at(x,y)
+	local res
+	foreach_game_object_of_kind("bomb", function(b)
+		if b.x == x and b.y == y then
+			res=b
+		end
+	end)
+	return res
 end
 -->8
 -- items
