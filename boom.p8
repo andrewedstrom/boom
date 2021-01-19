@@ -162,17 +162,19 @@ function animate(start)
 end
 
 function foreach_game_object_of_kind(kind, callback)
- local obj
- for obj in all(game_objects) do
-  if obj.kind == kind then
-   callback(obj)
-  end
- end
+	local obj
+	for obj in all(game_objects) do
+		if obj.kind == kind then
+			callback(obj)
+		end
+	end
 end
 -->8
 --bombs
 
 function make_bomb(x,y)
+	if bomb_at(x,y) then return end
+
 	local channel=0
 	sfx(2,channel)
 	make_game_object("bomb", x, y, {
@@ -208,6 +210,7 @@ function make_bomb(x,y)
 	})
 end
 
+-- todo move into bomb obj
 function explode(x,y,range,sfx_channel)
 	-- stop fuse sound
 	sfx(-1,sfx_channel)
