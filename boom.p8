@@ -235,6 +235,7 @@ function explode(x,y,range,sfx_channel)
 	sfx(1)
 	local lc,uc,rc,dc = true,true,true,true --continue flags
 	--center
+	explode_at(x,y)
 	new_explosion_cell("center",x,y)
 	local destx,desty,res
 	for i=1,range do
@@ -283,6 +284,10 @@ function explode_at(x,y)
 	if bomb then
 		bomb:explode()
 		return 0
+	end
+	
+	if p.x == x and p.y == y then
+		p.health=max(0, p.health-1)
 	end
 
 	local cell = mget(x,y)
