@@ -12,15 +12,6 @@ __lua__
 -- by Max Pellegrino and Dominik Leiser
 -- https://www.lexaloffle.com/bbs/?pid=86298#p
 
--- todo
--- limit bombs
--- nonoverlapping bomb sfx
--- particles on bombs
--- enemies
--- health system
--- levels
-
-
 local upd -- current update function
 local t
 local p
@@ -67,6 +58,7 @@ function _draw()
 end
 -->8
 --player
+
 local dirx={-1,1,0,0}
 local diry={0,0,-1,1}
 
@@ -147,7 +139,7 @@ function make_player()
 			if self.health <= 0 then
 				self.lives -= 1
 				self.health = 8
-				if self.lives < 0 then 
+				if self.lives < 0 then
 					-- game over but for now
 					self.lives = 0
 				end
@@ -159,7 +151,7 @@ end
 function draw_hud()
 	local lives=10+p.lives
 	spr(lives,8,8)
-	
+
 	for i=1,p.health do
 		local s=i%2==0 and 29 or 28
 		local x=(i-1)%2
@@ -264,12 +256,12 @@ function explode(x,y,range,sfx_channel)
 		 	new_explosion_cell("horiz",destx,desty,is_end or res==1,true,false)
 			end
 			lc = res > 1
-		end	
+		end
 		--right
 		if rc then
 			destx,desty=x+i,y
 			res = explode_at(destx,desty)
-	 	if res > 0 then 
+	 	if res > 0 then
 				new_explosion_cell("horiz",destx,desty,is_end or res==1,false,false)
 			end
 			rc = res > 1
@@ -278,7 +270,7 @@ function explode(x,y,range,sfx_channel)
 		if uc then
 			destx,desty=x,y-i
 			res = explode_at(destx,desty)
-	 	if res > 0 then 
+	 	if res > 0 then
 				new_explosion_cell("vert",destx,desty,is_end or res==1,false,false)
 			end
 			uc = res > 1
@@ -287,7 +279,7 @@ function explode(x,y,range,sfx_channel)
 		if dc then
 			destx,desty=x,y+i
 			res = explode_at(destx,desty)
-	 	if res > 0 then 
+	 	if res > 0 then
 				new_explosion_cell("vert",destx,desty,is_end or res==1,false,true)
 			end
 			dc = res > 1
@@ -301,7 +293,7 @@ function explode_at(x,y)
 		bomb:explode()
 		return 0
 	end
-	
+
 	if p.x == x and p.y == y then
 		p:take_damage()
 	end
@@ -335,7 +327,7 @@ function map_destruction(x,y,map_tile)
 			self.t+=1
 		end,
 		is_expired=function(self)
-			return self.t >= self.lifetime 
+			return self.t >= self.lifetime
 		end
 	})
 end
@@ -359,7 +351,7 @@ function new_explosion_cell(direc,x,y,is_end,flipx,flipy)
 		flipx=flipx,
 		flipy=flipy,
 		is_expired=function(self)
-			return self.t >= self.lifetime 
+			return self.t >= self.lifetime
 		end,
 		update= function(self)
 			self.t+=1
@@ -402,6 +394,8 @@ function make_coin(x,y)
 	})
 end
 
+-->8
+-- enemies
 __gfx__
 0000000000a77a0009a77a9089a77a9889a77a9889a77a9889a77a0000a77a0000077a00cdd333333ddddddc3ddddddc3ddddddc3ddddddccccccccccccccccc
 000000000a777a009a777a00977777779a7777a989a77a988aa77a9000a77a0000077a00cdd306603dd777dc3dd77ddc3dd777dc3dd777dccddddddddddddddc
@@ -547,4 +541,3 @@ __music__
 00 06090d4d
 00 06080c44
 02 06090d44
-
