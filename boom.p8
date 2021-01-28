@@ -16,6 +16,8 @@ local upd -- current update function
 local t
 local p
 local game_objects
+local dirx={-1,1,0,0}
+local diry={0,0,-1,1}
 
 function _init()
 	game_objects={}
@@ -27,6 +29,8 @@ function _init()
 	make_coin(11,7)
 	make_coin(12,3)
 	make_coin(16,8)
+	make_enemy(7,5)
+	make_enemy(11,11)
 	music(0,0,7)
 	sfx(5)
 end
@@ -59,20 +63,14 @@ end
 -->8
 --player
 
-local dirx={-1,1,0,0}
-local diry={0,0,-1,1}
-
 function make_player()
  return make_game_object("player",3,1,{
 		t=1, -- transition progress
 		d=3, -- direction
 		lives=3,
 		health=8,
-		ox=0,
-		oy=0,
 		mov=nil, -- movement function
 		dir_sprs={96,112,64,80},
-		input_buff=-1,
 		update=function(self)
 			if btnp(4) or btnp(5) then
 				make_bomb(self.x,self.y)
@@ -85,10 +83,6 @@ function make_player()
 				self:handle_input()
 			end
 		end,
-		mov_walk=function(self)
-				self.ox=self.sox*(1-self.t)
-				self.oy=self.soy*(1-self.t)
-		end,
 		mov_bump=function(self)
 			local mult=self.t
 			if mult > 0.5 then
@@ -98,6 +92,7 @@ function make_player()
 			self.oy=self.soy*mult
 		end,
 		handle_input=function(self)
+			local i
 			for i=0,3 do
 				if btn(i) then
 					self.d=i
@@ -113,11 +108,7 @@ function make_player()
 						self.sox,self.soy=dx*8,dy*8
 						self.ox,self.oy=0,0
 					else
-						self.mov=self.mov_walk
-						self.x+=dx
-						self.y+=dy
-						self.sox,self.soy=-dx*8,-dy*8
-						self.ox,self.oy=self.sox,self.soy
+						self:start_walk(dx,dy)
 						return
 					end
 				end
@@ -167,12 +158,22 @@ function make_game_object(kind,x,y,props)
 		kind=kind,
 		x=x,
 		y=y,
+		ox=0,
+		oy=0,
+		mov=nil,
 		draw=function()
 		end,
 		update=function()
 		end,
 		is_expired=function()
 			return false
+		end,
+		start_walk=function(self,dx,dy)
+			self.mov=mov_walk
+			self.x+=dx
+			self.y+=dy
+			self.sox,self.soy=-dx*8,-dy*8
+			self.ox,self.oy=self.sox,self.soy
 		end
 	}
 
@@ -197,6 +198,11 @@ function foreach_game_object_of_kind(kind, callback)
 			callback(obj)
 		end
 	end
+end
+
+function mov_walk(self)
+	self.ox=self.sox*(1-self.t)
+	self.oy=self.soy*(1-self.t)
 end
 -->8
 --bombs
@@ -396,6 +402,63 @@ end
 
 -->8
 -- enemies
+
+function make_enemy(x,y)
+ return make_game_object("enemy",x,y,{
+		t=1, -- transition progress
+		d=3, -- direction
+		lives=3,
+		health=8,
+		ox=0,
+		oy=0,
+		dir_sprs={160,176,128,144},
+		update=function(self)
+			if self.t < 1 then
+			 -- transitioning b/t tiles
+				self.t=min(self.t+0.05,1)
+				self:mov()
+			else
+				self:choose_dir()
+			end
+		end,
+		choose_dir=function(self)
+			local cand,i={}
+			for i=0,3 do
+					local dx,dy=dirx[i+1],diry[i+1]
+
+					local destx,desty=self.x+dx,self.y+dy
+					local tile=mget(destx,desty)
+			 	if not fget(tile, 0) then
+						-- passable
+						add(cand,{d=i,dx=dx,dy=dy})
+					end
+			end
+			
+			di=random_array_el(cand)
+			self.d=di.d
+			self.t=0
+			self:start_walk(di.dx,di.dy)
+		end,
+		walk=function(self)
+				self.ox=self.sox*(1-self.t)
+				self.oy=self.soy*(1-self.t)
+		end,
+		draw=function(self)
+			palt(0, false)
+			palt(4, true)
+			local sprite = self.dir_sprs[self.d+1]
+			sprite=animate(sprite)
+			spr(sprite,self.x*8+self.ox,self.y*8+self.oy)
+			pal()
+		end
+	})
+end
+-->8
+--utils
+
+function random_array_el(a)
+	return a[flr(rnd(#a))+1]
+end
 __gfx__
 0000000000a77a0009a77a9089a77a9889a77a9889a77a9889a77a0000a77a0000077a00cdd333333ddddddc3ddddddc3ddddddc3ddddddccccccccccccccccc
 000000000a777a009a777a00977777779a7777a989a77a988aa77a9000a77a0000077a00cdd306603dd777dc3dd77ddc3dd777dc3dd777dccddddddddddddddc
@@ -541,3 +604,4 @@ __music__
 00 06090d4d
 00 06080c44
 02 06090d44
+
