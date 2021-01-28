@@ -59,6 +59,9 @@ function _draw()
 	end
 	p:draw()
 	draw_hud()
+	
+	print('mem:'..stat(0), 1, 110, 7)
+ print('cpu:'..stat(1), 1, 120, 7)
 end
 -->8
 --player
@@ -69,9 +72,13 @@ function make_player()
 		d=3, -- direction
 		lives=3,
 		health=8,
+		invincible=-1,
 		mov=nil, -- movement function
 		dir_sprs={96,112,64,80},
 		update=function(self)
+			self.invincible-= 1
+			
+		
 			if btnp(4) or btnp(5) then
 				make_bomb(self.x,self.y)
 			end
@@ -121,11 +128,20 @@ function make_player()
 			if self.t < 1 then
 				sprite=animate(sprite+1)
 			end
+			if self.invincible > 0 and t%3==0 then
+				pal()
+				return
+			end
+			
 			spr(sprite,self.x*8+self.ox,self.y*8+self.oy)
 			pal()
 		end,
 		take_damage=function(self)
+			if self.invincible > 0 then
+				return
+			end
 			self.health-=1
+			self.invincible = 90
 			sfx(14)
 			if self.health <= 0 then
 				self.lives -= 1
@@ -420,6 +436,9 @@ function make_enemy(x,y)
 			else
 				self:choose_dir()
 			end
+			if self.x == p.x and self.y==p.y then
+				p:take_damage()
+			end
 		end,
 		choose_dir=function(self)
 			local cand,i={}
@@ -430,11 +449,16 @@ function make_enemy(x,y)
 					local tile=mget(destx,desty)
 			 	if not fget(tile, 0) then
 						-- passable
-						add(cand,{d=i,dx=dx,dy=dy})
+						local di={d=i,dx=dx,dy=dy}
+						add(cand,di)
+						if d == self.d then
+							-- slight preference for current dir
+							add(cand,di)
+						end
 					end
 			end
 			
-			di=random_array_el(cand)
+			local di=random_array_el(cand)
 			self.d=di.d
 			self.t=0
 			self:start_walk(di.dx,di.dy)
@@ -456,8 +480,8 @@ end
 -->8
 --utils
 
-function random_array_el(a)
-	return a[flr(rnd(#a))+1]
+function random_array_el(arr)
+	return arr[flr(rnd(#arr))+1]
 end
 __gfx__
 0000000000a77a0009a77a9089a77a9889a77a9889a77a9889a77a0000a77a0000077a00cdd333333ddddddc3ddddddc3ddddddc3ddddddccccccccccccccccc
