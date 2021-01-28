@@ -181,6 +181,8 @@ function make_game_object(kind,x,y,props)
 		is_expired=function()
 			return false
 		end,
+		take_damage=function()
+		end,
 		start_walk=function(self,dx,dy)
 			self.mov=mov_walk
 			self.x+=dx
@@ -316,6 +318,12 @@ function explode_at(x,y)
 	if p.x == x and p.y == y then
 		p:take_damage()
 	end
+	
+	foreach_game_object_of_kind("enemy", function(e)
+		if e.x==x and e.y==y then
+			e:take_damage()
+		end
+	end)
 
 	local cell = mget(x,y)
 	if fget(cell,1) then
@@ -424,8 +432,16 @@ function make_enemy(x,y)
 		health=8,
 		ox=0,
 		oy=0,
+		death_timer=0,
+		dying=false,
+		lifetime=120,
 		dir_sprs={160,176,128,144},
 		update=function(self)
+			if self.dying then
+				self.death_timer+=1
+				return
+			end
+		
 			if self.t < 1 then
 			 -- transitioning b/t tiles
 				self.t=min(self.t+0.05,1)
@@ -436,6 +452,12 @@ function make_enemy(x,y)
 			if self.x == p.x and self.y==p.y then
 				p:take_damage()
 			end
+		end,
+		take_damage=function(self)
+			self.dying=true
+		end,
+		is_expired=function(self)
+			return self.death_timer > self.lifetime
 		end,
 		choose_dir=function(self)
 			local cand,i={}
@@ -455,7 +477,7 @@ function make_enemy(x,y)
 					end
 			end
 			
-			local di=random_array_el(cand)
+			local di=rnd(cand)
 			self.d=di.d
 			self.t=0
 			self:start_walk(di.dx,di.dy)
@@ -467,18 +489,14 @@ function make_enemy(x,y)
 		draw=function(self)
 			palt(0, false)
 			palt(4, true)
-			local sprite = self.dir_sprs[self.d+1]
-			sprite=animate(sprite)
+			local sprite = animate(self.dir_sprs[self.d+1])
+			if self.dying then
+				sprite=132+flr(t/8)%2
+			end
 			spr(sprite,self.x*8+self.ox,self.y*8+self.oy)
 			pal()
 		end
 	})
-end
--->8
---utils
-
-function random_array_el(arr)
-	return arr[flr(rnd(#arr))+1]
 end
 __gfx__
 0000000000a77a0009a77a9089a77a9889a77a9889a77a9889a77a0000a77a0000077a00cdd333333ddddddc3ddddddc3ddddddc3ddddddccccccccccccccccc
@@ -550,8 +568,8 @@ __gfx__
 499999944999999449999994499999944fffff944000000400000000000000000000000000000000000000000000000000000000000000000000000000000000
 499999f4499999f4499999f4499999f440000004400f00f400000000000000000000000000000000000000000000000000000000000000000000000000000000
 4ffffff44ffffff44ffffff44ffffff4400f00f44cf7ffc400000000000000000000000000000000000000000000000000000000000000000000000000000000
-40000004f000000440000004f00000044cf7ffc4c000000c00000000000000000000000000000000000000000000000000000000000000000000000000000000
-4f000554440000444550004444000044c000000cf400004f00000000000000000000000000000000000000000000000000000000000000000000000000000000
+40000004f000000440000004f00000044cf7fcf4c000000c00000000000000000000000000000000000000000000000000000000000000000000000000000000
+4f0005544400004445500044440000444c000c04f400004f00000000000000000000000000000000000000000000000000000000000000000000000000000000
 44d4454444d4454444544d4444544d44f4d44d4f44d44d4400000000000000000000000000000000000000000000000000000000000000000000000000000000
 99999994999999949999999499999994000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 4fffff944fffff944fffff944fffff94000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
