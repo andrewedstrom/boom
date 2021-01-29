@@ -59,7 +59,7 @@ function _draw()
 	end
 	p:draw()
 	draw_hud()
-	
+
 	print('mem:'..stat(0), 1, 110, 7)
  print('cpu:'..stat(1), 1, 120, 7)
 end
@@ -264,51 +264,34 @@ function explode(x,y,range,sfx_channel)
 	sfx(1)
 	local lc,uc,rc,dc = true,true,true,true --continue flags
 	--center
-	explode_at(x,y)
-	new_explosion_cell("center",x,y)
-	local destx,desty,res
+	explode_at("center",x,y,false,false,false)
+	local destx,desty
 	for i=1,range do
-		local is_end = i==range
-	 --left
-	 if lc then
-	 	destx,desty=x-i,y
-	 	res = explode_at(destx,desty)
-	 	if res > 0 then
-		 	new_explosion_cell("horiz",destx,desty,is_end or res==1,true,false)
-			end
-			lc = res > 1
+		local is_end = i == range
+		--left
+		if lc then
+			destx,desty=x-i,y
+			lc = explode_at("horiz",destx,desty,is_end,true,false)
 		end
 		--right
 		if rc then
 			destx,desty=x+i,y
-			res = explode_at(destx,desty)
-	 	if res > 0 then
-				new_explosion_cell("horiz",destx,desty,is_end or res==1,false,false)
-			end
-			rc = res > 1
+			rc = explode_at("horiz",destx,desty,is_end,false,false)
 		end
 		--up
 		if uc then
 			destx,desty=x,y-i
-			res = explode_at(destx,desty)
-	 	if res > 0 then
-				new_explosion_cell("vert",destx,desty,is_end or res==1,false,false)
-			end
-			uc = res > 1
+			uc = explode_at("vert",destx,desty,is_end,false,false)
 		end
 		--down
 		if dc then
 			destx,desty=x,y+i
-			res = explode_at(destx,desty)
-	 	if res > 0 then
-				new_explosion_cell("vert",destx,desty,is_end or res==1,false,true)
-			end
-			dc = res > 1
+			dc = explode_at("vert",destx,desty,is_end,false,true)
 		end
 	end
 end
 
-function explode_at(x,y)
+function explode_at(direc,x,y,is_end,flipx,flipy)
 	local bomb=bomb_at(x,y)
 	if bomb then
 		bomb:explode()
@@ -318,7 +301,7 @@ function explode_at(x,y)
 	if p.x == x and p.y == y then
 		p:take_damage()
 	end
-	
+
 	foreach_game_object_of_kind("enemy", function(e)
 		if e.x==x and e.y==y then
 			e:take_damage()
@@ -326,16 +309,22 @@ function explode_at(x,y)
 	end)
 
 	local cell = mget(x,y)
-	if fget(cell,1) then
+	local can_break = fget(cell,1)
+	local solid_block = fget(cell,0)
+	if solid_block and not can_break then
+		return false
+	end
+
+	local broke_something = false
+	if can_break then
 		--hit something that can break
 		map_destruction(x,y,cell)
-		return 1
-	elseif fget(cell,0) then
-		-- hit something that can't be broken
-		return 0
+		broke_something=true
 	end
-	-- haven't hit anything
-	return 2
+
+	new_explosion_cell(direc,x,y,is_end or broke_something,flipx,flipy)
+
+	return not broke_something
 end
 
 function map_destruction(x,y,map_tile)
@@ -441,7 +430,7 @@ function make_enemy(x,y)
 				self.death_timer+=1
 				return
 			end
-		
+
 			if self.t < 1 then
 			 -- transitioning b/t tiles
 				self.t=min(self.t+0.05,1)
@@ -476,7 +465,7 @@ function make_enemy(x,y)
 						end
 					end
 			end
-			
+
 			local di=rnd(cand)
 			self.d=di.d
 			self.t=0
