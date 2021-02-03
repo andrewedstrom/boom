@@ -300,16 +300,6 @@ function explode_at(direc,x,y,is_end,flipx,flipy)
 		return 0
 	end
 
-	if p.x == x and p.y == y then
-		p:take_damage()
-	end
-
-	foreach_game_object_of_kind("enemy", function(e)
-		if e.x==x and e.y==y then
-			e:take_damage()
-		end
-	end)
-
 	local cell = mget(x,y)
 	local can_break = fget(cell,1)
 	local solid_block = fget(cell,0)
@@ -373,6 +363,16 @@ function new_explosion_cell(direc,x,y,is_end,flipx,flipy)
 		end,
 		update= function(self)
 			self.t+=1
+			
+			if p.x == x and p.y == y then
+				p:take_damage()
+			end
+
+			foreach_game_object_of_kind("enemy", function(e)
+				if e.x==x and e.y==y then
+					e:take_damage()
+				end
+			end)
 		end,
 		draw = function(self)
 			local frame_len=self.lifetime/#self.ani
