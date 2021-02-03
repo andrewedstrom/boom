@@ -62,6 +62,7 @@ function _draw()
 	p:draw()
 	draw_hud()
 
+	print(p.bombs, 1, 100, 7)
 	print('mem:'..stat(0), 1, 110, 7)
  print('cpu:'..stat(1), 1, 120, 7)
 end
@@ -75,13 +76,16 @@ function make_player()
 		lives=3,
 		health=8,
 		invincible=-1,
+		bombs=3,
 		mov=nil, -- movement function
 		dir_sprs={96,112,64,80},
 		update=function(self)
 			self.invincible-= 1
 
 			if btnp(4) or btnp(5) then
-				make_bomb(self.x,self.y)
+				if self.bombs > 0 then
+					make_bomb(self)
+				end
 			end
 			if self.t < 1 then
 			 -- transitioning b/t tiles
@@ -224,12 +228,14 @@ end
 -->8
 --bombs
 
-function make_bomb(x,y)
-	if bomb_at(x,y) then return end
+function make_bomb(p)
+	if bomb_at(p.x,p.y) then return end
+	p.bombs-=1
 	sfx(3)
-	make_game_object("bomb", x, y, {
+	make_game_object("bomb", p.x, p.y, {
 		ani={86, 87},
 		ttl=180,
+		parent=p,
 		channel=channel,
 		update=function(self)
 			self.ttl-=1
@@ -240,9 +246,13 @@ function make_bomb(x,y)
 		explode=function(self)
 			self.ttl=0
 			del(game_objects, self)
-			explode(x,y,3,self.channel)
+			self.parent.bombs += 1
+			explode(self.x,self.y,3,self.channel)
 		end,
 		is_expired=function(self)
+			-- since we're deleting from
+			-- game_objects manually,
+			-- this is pointless
 			return self.ttl <= 0
 		end,
 		draw=function(self)
@@ -254,7 +264,7 @@ function make_bomb(x,y)
 			end
 			sprite=self.ani[flr(t/interval)%2+1]
 
-			spr(sprite,x*8,y*8)
+			spr(sprite,self.x*8,self.y*8)
 			pal()
 		end
 	})
