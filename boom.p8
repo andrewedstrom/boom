@@ -26,6 +26,10 @@ local next_lvl_countdown
 local cam_x
 local cam_y
 local num_lvls=2
+local squares
+local xmax=13
+local ymax=15
+
 
 function _init()
 	game_objects={}
@@ -33,6 +37,7 @@ function _init()
 	lvl=1
 	t=0
 	next_lvl_countdown=180
+	squares={}
 	
 	upd=update_new_lvl
 	drw=draw_new_lvl
@@ -84,6 +89,7 @@ function update_new_lvl()
 		music(0,0,7)
 		sfx(5)
 		game_objects={}
+		squares={}
 	
 		local px,py=3,1
 		local starting_tile
@@ -101,10 +107,10 @@ function update_new_lvl()
 		
 		--process map
 		local i,j
-		for i=0,13 do
-			for j=0,15 do
-				local cellx=starting_x+i
-				local celly=j
+		for x=0,xmax do
+			for y=0,ymax do
+				local cellx=starting_x+x
+				local celly=y
 				
 				local s=mget(cellx,celly)
 				local new_spr=85
