@@ -70,7 +70,7 @@ function lvl_up()
 	music(10,0,7)
 	game_objects={}
 	if lvl > num_lvls then
-			upd=update_win_screen
+			upd=noop
 			drw=draw_win_screen
 	end
 end
@@ -148,11 +148,12 @@ function draw_new_lvl()
 	centered_print("get ready!",80,70)
 end
 
-function update_win_screen()
-end
-
 function draw_win_screen()
 	centered_print("you win!",80,60)
+end
+
+function draw_game_over()
+	centered_print("u ded",80,60)
 end
 -->8
 --player
@@ -161,7 +162,7 @@ function make_player(x,y)
  return make_game_object("player",x,y,{
 		t=1, -- transition progress
 		d=3, -- direction
-		lives=3,
+		lives=0,
 		health=8,
 		invincible=-1,
 		bombs=3,
@@ -236,10 +237,13 @@ function make_player(x,y)
 			sfx(16)
 			if self.health <= 0 then
 				self.lives -= 1
-				self.health = 8
 				if self.lives < 0 then
-					-- game over but for now
-					self.lives = 0
+					upd=noop
+					drw=draw_game_over
+					--todo probably unnecessary
+					self.lives=0
+				else
+					self.health = 8
 				end
 			end
 		end
@@ -597,6 +601,9 @@ end
 
 function centered_print(message, x, y, col)
 	print(message, x - #message * 2, y, col or 7)
+end
+
+function noop()
 end
 __gfx__
 0000000000a77a0009a77a9089a77a9889a77a9889a77a9889a77a0000a77a0000077a00cdd333333ddddddc3ddddddc3ddddddc3ddddddccccccccccccccccc
