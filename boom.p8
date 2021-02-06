@@ -30,7 +30,6 @@ local squares
 local xmax=13
 local ymax=15
 
-
 function _init()
 	game_objects={}
 	p=make_player(3,1)
@@ -106,7 +105,7 @@ function update_new_lvl()
 		end
 		
 		--process map
-		local i,j
+		local x,y
 		for x=0,xmax do
 			for y=0,ymax do
 				local cellx=starting_x+x
@@ -215,6 +214,7 @@ function make_player(x,y)
 						self.sox,self.soy=dx*8,dy*8
 						self.ox,self.oy=0,0
 					else
+						--update list of squares
 						self:start_walk(dx,dy)
 						return
 					end
@@ -585,6 +585,8 @@ function make_enemy(x,y)
 			self.d=di.d
 			self.t=0
 			self:start_walk(di.dx,di.dy)
+			
+			--make_bullet(dir,self.x,self.y)
 		end,
 		walk=function(self)
 				self.ox=self.sox*(1-self.t)
