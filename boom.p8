@@ -29,6 +29,8 @@ local num_lvls=2
 local squares
 local xmax=13
 local ymax=15
+local starting_x
+local starting_y
 
 function _init()
 	game_objects={}
@@ -36,7 +38,6 @@ function _init()
 	lvl=1
 	t=0
 	next_lvl_countdown=180
-	squares={}
 	
 	upd=update_new_lvl
 	drw=draw_new_lvl
@@ -88,10 +89,9 @@ function update_new_lvl()
 		music(0,0,7)
 		sfx(5)
 		game_objects={}
-		squares={}
 	
 		local px,py=3,1
-		local starting_tile
+		starting_y=0
 		if lvl==1 then --lvls
 			cam_x=0 
 			cam_y=0
@@ -104,6 +104,7 @@ function update_new_lvl()
 			py=1
 		end
 		
+		squares=blankmap()
 		--process map
 		local x,y
 		for x=0,xmax do
@@ -214,8 +215,8 @@ function make_player(x,y)
 						self.sox,self.soy=dx*8,dy*8
 						self.ox,self.oy=0,0
 					else
-						--update list of squares
 						self:start_walk(dx,dy)
+						update_squares(self.x,self.y)
 						return
 					end
 				end
@@ -595,6 +596,10 @@ function make_enemy(x,y)
 		draw=function(self)
 			palt(0, false)
 			palt(4, true)
+			if squares[self.x][self.y] then
+				pal(9,11)
+			end
+			
 			local sprite = animate(self.dir_sprs[self.d+1])
 			if self.dying then
 				sprite=132+flr(t/8)%2
@@ -612,6 +617,63 @@ function centered_print(message, x, y, col)
 end
 
 function noop()
+end
+
+function blankmap()
+	local ret,x,y={}
+	for x=starting_x,starting_x+xmax do
+		ret[x]={}
+		for y=starting_y,starting_y+ymax do
+			ret[x][y]=false
+		end
+	end
+	return ret
+end
+
+function update_squares(x,y)
+	squares=blankmap()
+	
+	local lc,uc,rc,dc=true,true,true,true --continue flags
+	local candx,candy
+	for i=1,ymax do
+		--left
+		if lc then
+			candx,candy=x-i,y
+			lc=los_continues(candx,candy)
+		end
+		--right
+		if rc then
+			candx,candy=x+i,y
+			rc=los_continues(candx,candy)
+		end
+		--up
+		if uc then
+			candx,candy=x,y-i
+			uc=los_continues(candx,candy)
+		end
+		--down
+		if dc then
+			candx,candy=x,y+i
+			dc=los_continues(candx,candy)
+		end
+		
+		if not (lc or uc or rc or dc) then
+			return 
+		end
+	end
+end
+
+--line of sight
+function los_continues(x,y)
+
+	local cell = mget(x,y)
+	local is_wall=fget(cell,0)
+	if not is_wall then
+		-- can see player from here
+		squares[x][y]=true
+	end
+	
+	return not is_wall
 end
 __gfx__
 0000000000a77a0009a77a9089a77a9889a77a9889a77a9889a77a0000a77a0000077a00cdd333333ddddddc3ddddddc3ddddddc3ddddddccccccccccccccccc
