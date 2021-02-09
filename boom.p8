@@ -38,7 +38,7 @@ function _init()
 	lvl=1
 	t=0
 	next_lvl_countdown=180
-	
+
 	upd=update_new_lvl
 	drw=draw_new_lvl
 end
@@ -58,7 +58,7 @@ function update_game()
 			obj:update()
 		end
 	end
-	
+
 	local num_enemies=0
 	foreach_game_object_of_kind("enemy",function(e)
 		num_enemies+=1
@@ -89,13 +89,13 @@ function update_new_lvl()
 		music(0,0,7)
 		sfx(5)
 		game_objects={}
-	
+
 		local px,py=3,1
 		starting_y=0
 		if lvl==1 then --lvls
-			cam_x=0 
+			cam_x=0
 			cam_y=0
-			starting_x=2		
+			starting_x=2
 		elseif lvl==2 then
 			cam_x=112
 			starting_x=16
@@ -103,7 +103,7 @@ function update_new_lvl()
 			px=17
 			py=1
 		end
-		
+
 		squares=blankmap()
 		--process map
 		local x,y
@@ -111,7 +111,7 @@ function update_new_lvl()
 			for y=0,ymax do
 				local cellx=starting_x+x
 				local celly=y
-				
+
 				local s=mget(cellx,celly)
 				local new_spr=85
 				if s==92 then
@@ -124,7 +124,7 @@ function update_new_lvl()
 				mset(cellx,celly,new_spr)
 			end
 		end
-		
+
 		--todo simplify
 		p_health=p.health
 		p_lives=p.lives
@@ -270,7 +270,7 @@ function draw_hud()
 		local y=3+flr((i-1)/2)
 		spr(s,x*8,y*8)
 	end
-	
+
 	--print('mem:'..stat(0), 1, 110, 7)
  --print('cpu:'..stat(1), 1, 120, 7)
 	pal()
@@ -478,7 +478,7 @@ function new_explosion_cell(direc,x,y,is_end,flipx,flipy)
 		end,
 		update= function(self)
 			self.t+=1
-			
+
 			if p.x == x and p.y == y then
 				p:take_damage()
 			end
@@ -565,9 +565,19 @@ function make_enemy(x,y)
 		choose_dir=function(self)
 			if squares[self.x][self.y] then
 				-- shoot
-				make_bullet(self.x,self.y,0)
+				local d=3
+				if p.x < self.x then
+					--left
+					d=0
+				elseif p.x > self.x then
+					--right
+					d=1
+				elseif p.y < self.y then
+					d=2
+				end
+				make_bullet(self.x,self.y,d)
 			end
-		
+
 			local cand,i={}
 			for i=0,3 do
 					local dx,dy=dirx[i+1],diry[i+1]
@@ -588,7 +598,7 @@ function make_enemy(x,y)
 			self.d=di.d
 			self.t=0
 			self:start_walk(di.dx,di.dy)
-			
+
 			--make_bullet(dir,self.x,self.y)
 		end,
 		walk=function(self)
@@ -598,10 +608,7 @@ function make_enemy(x,y)
 		draw=function(self)
 			palt(0, false)
 			palt(4, true)
-			if squares[self.x][self.y] then
-				-- pal(9,11)
-			end
-			
+
 			local sprite = animate(self.dir_sprs[self.d+1])
 			if self.dying then
 				sprite=132+flr(t/8)%2
@@ -624,19 +631,19 @@ function make_bullet(x,y,direc)
 			local dx,dy=dirx[self.d+1],diry[self.d+1]
 			self.ox+=dx*self.speed
 			self.oy+=dy*self.speed
-			
+
 			if abs(self.ox)>=8 or abs(self.oy)>=8 then
 				--advance one tile
 				self.ox=0
 				self.oy=0
 				self.x+=dx
 				self.y+=dy
-				
+
 				--check for collision
 				if tile_is_wall(self.x,self.y) then
 					self.hit=true
 				end
-				
+
 				if self.x == p.x and self.y==p.y then
 					p:take_damage()
 					self.hit=true
@@ -645,7 +652,7 @@ function make_bullet(x,y,direc)
 		end,
 		draw=function(self)
 			sprite=125
-			if self.d >=2 then 
+			if self.d >=2 then
 				sprite=126
 			end
 			spr(sprite,self.x*8+self.ox,self.y*8+self.oy)
@@ -681,7 +688,7 @@ end
 
 function update_squares(x,y)
 	squares=blankmap()
-	
+
 	local lc,uc,rc,dc=true,true,true,true --continue flags
 	local candx,candy
 	for i=1,ymax do
@@ -705,9 +712,9 @@ function update_squares(x,y)
 			candx,candy=x,y+i
 			dc=los_continues(candx,candy)
 		end
-		
+
 		if not (lc or uc or rc or dc) then
-			return 
+			return
 		end
 	end
 end
@@ -719,7 +726,7 @@ function los_continues(x,y)
 		-- can see player from here
 		squares[x][y]=true
 	end
-	
+
 	return not is_wall
 end
 __gfx__
@@ -872,4 +879,3 @@ __music__
 00 06080c44
 02 06090d44
 04 11121344
-
