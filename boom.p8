@@ -179,7 +179,7 @@ function make_player(x,y)
 
 			if btnp(4) or btnp(5) then
 				if self.bombs > 0 then
-					make_bomb(self)
+					make_bomb()
 				end
 			end
 			if self.t < 1 then
@@ -272,7 +272,7 @@ function draw_hud()
 	end
 
 	--print('mem:'..stat(0), 1, 110, 7)
- --print('cpu:'..stat(1), 1, 120, 7)
+	--print('cpu:'..stat(1), 1, 120, 7)
 	pal()
 end
 -->8
