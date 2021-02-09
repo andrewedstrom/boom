@@ -168,7 +168,7 @@ function make_player(x,y)
  return make_game_object("player",x,y,{
 		t=1, -- transition progress
 		d=3, -- direction
-		lives=0,
+		lives=3,
 		health=8,
 		invincible=-1,
 		bombs=3,
@@ -206,9 +206,8 @@ function make_player(x,y)
 					local dx,dy=dirx[i+1],diry[i+1]
 
 					local destx,desty=self.x+dx,self.y+dy
-					local tile=mget(destx,desty)
 				 self.t=0
-					if fget(tile, 0) then
+					if tile_is_wall(destx,desty) then
 						-- impassable
 						sfx(0)
 						self.mov=self.mov_bump
@@ -272,8 +271,8 @@ function draw_hud()
 		spr(s,x*8,y*8)
 	end
 	
-	print('mem:'..stat(0), 1, 110, 7)
- print('cpu:'..stat(1), 1, 120, 7)
+	--print('mem:'..stat(0), 1, 110, 7)
+ --print('cpu:'..stat(1), 1, 120, 7)
 	pal()
 end
 -->8
@@ -419,8 +418,7 @@ function explode_at(direc,x,y,is_end,flipx,flipy)
 
 	local cell = mget(x,y)
 	local can_break = fget(cell,1)
-	local solid_block = fget(cell,0)
-	if solid_block and not can_break then
+	if tile_is_wall(x,y) and not can_break then
 		return false
 	end
 
@@ -565,13 +563,17 @@ function make_enemy(x,y)
 			return self.death_timer > self.lifetime
 		end,
 		choose_dir=function(self)
+			if squares[self.x][self.y] then
+				-- shoot
+				make_bullet(self.x,self.y,0)
+			end
+		
 			local cand,i={}
 			for i=0,3 do
 					local dx,dy=dirx[i+1],diry[i+1]
 
 					local destx,desty=self.x+dx,self.y+dy
-					local tile=mget(destx,desty)
-			 	if not fget(tile, 0) then
+			 	if not tile_is_wall(destx,desty) then
 						-- passable
 						local di={d=i,dx=dx,dy=dy}
 						add(cand,di)
@@ -597,7 +599,7 @@ function make_enemy(x,y)
 			palt(0, false)
 			palt(4, true)
 			if squares[self.x][self.y] then
-				pal(9,11)
+				-- pal(9,11)
 			end
 			
 			local sprite = animate(self.dir_sprs[self.d+1])
@@ -609,6 +611,49 @@ function make_enemy(x,y)
 		end
 	})
 end
+
+function make_bullet(x,y,direc)
+	make_game_object("bullet",x,y,{
+		d=direc,
+		speed=0.7,
+		hit=false,
+		is_expired=function(self)
+			return self.hit
+		end,
+		update=function(self)
+			local dx,dy=dirx[self.d+1],diry[self.d+1]
+			self.ox+=dx*self.speed
+			self.oy+=dy*self.speed
+			
+			if abs(self.ox)>=8 or abs(self.oy)>=8 then
+				--advance one tile
+				self.ox=0
+				self.oy=0
+				self.x+=dx
+				self.y+=dy
+				
+				--check for collision
+				if tile_is_wall(self.x,self.y) then
+					self.hit=true
+				end
+				
+				if self.x == p.x and self.y==p.y then
+					p:take_damage()
+					self.hit=true
+				end
+			end
+		end,
+		draw=function(self)
+			sprite=125
+			if self.d >=2 then 
+				sprite=126
+			end
+			spr(sprite,self.x*8+self.ox,self.y*8+self.oy)
+		end
+	})
+end
+
+
 -->8
 --utils
 
@@ -617,6 +662,10 @@ function centered_print(message, x, y, col)
 end
 
 function noop()
+end
+
+function tile_is_wall(x,y)
+		return fget(mget(x,y),0)
 end
 
 function blankmap()
@@ -665,9 +714,7 @@ end
 
 --line of sight
 function los_continues(x,y)
-
-	local cell = mget(x,y)
-	local is_wall=fget(cell,0)
+	local is_wall=tile_is_wall(x,y)
 	if not is_wall then
 		-- can see player from here
 		squares[x][y]=true
@@ -737,9 +784,9 @@ __gfx__
 43366064433660644336606443366064433660640494404404444990499494940449999994944444440449999494404404044999000000000000000000000000
 43336664433366644333666443336664433366640444099409944440499444940944444444444994999044444444099409904444000000000000000000000000
 44133333441333334413333344133333441333330940499404444490499444440444499949444994444404994940499404440499000000000000000000000000
-44311144443111444431114444311144443111440909499409999440444449490994444449494994999990444909499409999044000000000000000000000000
-44439344445933d44453934444d3395444d393440049499409999490494949490444999949494994999994094049499409999409000000000000000000000000
-4444ddd444454d444445dd44444d4544444d55440949499404444440000000000994444449494994444444400949499404444440000000000000000000000000
+44311144443111444431114444311144443111440909499409999440444449490994444449494994999990444909499409999044000000660000000000000000
+44439344445933d44453934444d3395444d393440049499409999490494949490444999949494994999994094049499409999409000000000006000000000000
+4444ddd444454d444445dd44444d4544444d55440949499404444440000000000994444449494994444444400949499404444440000000000006000000000000
 49999999499999994999999949999999444444449999999400000000000000000000000000000000000000000000000000000000000000000000000000000000
 49999994499999944999999449999994999999944fffff9400000000000000000000000000000000000000000000000000000000000000000000000000000000
 499999944999999449999994499999944fffff944000000400000000000000000000000000000000000000000000000000000000000000000000000000000000
