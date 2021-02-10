@@ -37,6 +37,8 @@ function make_enemy(x, y)
 			ox = 0,
 			oy = 0,
 			death_timer = 0,
+			shot_timer = 0, --cooldown b/t shots
+			shot_cooldown = 70,
 			dying = false,
 			lifetime = 120,
 			dir_sprs = {160, 176, 128, 144},
@@ -45,6 +47,7 @@ function make_enemy(x, y)
 					self.death_timer = self.death_timer + 1
 					return
 				end
+				self.shot_timer = self.shot_timer - 1
 
 				if self.t < 1 then
 					-- transitioning b/t tiles
@@ -64,7 +67,7 @@ function make_enemy(x, y)
 				return self.death_timer > self.lifetime
 			end,
 			choose_dir = function(self)
-				if squares[self.x][self.y] then
+				if squares[self.x][self.y] and self.shot_timer <= 0 then
 					-- shoot
 					local d = 3
 					if p.x < self.x then
@@ -77,6 +80,7 @@ function make_enemy(x, y)
 						d = 2
 					end
 					make_bullet(self.x, self.y, d)
+					self.shot_timer = self.shot_cooldown
 				end
 
 				local cand, same_dir_di, i = {}
@@ -99,7 +103,7 @@ function make_enemy(x, y)
 					-- if only two directions
 					-- and you can keep going in the current direction
 					-- then continue in the same direction
-					di=same_dir_di
+					di = same_dir_di
 				end
 
 				self.d = di.d
@@ -128,7 +132,7 @@ function make_bullet(x, y, direc)
 		y,
 		{
 			d = direc,
-			speed = 0.7,
+			speed = 0.6,
 			hit = false,
 			is_expired = function(self)
 				return self.hit
