@@ -14,8 +14,26 @@ function make_player(x, y)
 			invincible = -1,
 			bombs = 3,
 			mov = nil, -- movement function
+			death_timer = 0,
 			dir_sprs = {96, 112, 64, 80},
 			update = function(self)
+				if self.death_timer > 0 then
+					self.death_timer = self.death_timer - 1
+					if self.death_timer == 0 then
+						-- respawn
+						self.lives = self.lives - 1
+						if self.lives < 0 then
+							upd = noop
+							drw = draw_game_over
+							self.lives = 0
+						else
+							self.health = 8
+						end
+					end
+
+					return
+				end
+
 				self.invincible = self.invincible - 1
 
 				if btnp(4) or btnp(5) then
@@ -69,29 +87,25 @@ function make_player(x, y)
 				end
 				if self.invincible > 0 and t % 3 == 0 then
 					return
+				elseif self.death_timer > 0 then
+					sprite = 70 + flr(t / 8) % 2
 				end
+
 				palt(0, false)
 				palt(4, true)
 				spr(sprite, self.x * 8 + self.ox, self.y * 8 + self.oy)
 				pal()
 			end,
 			take_damage = function(self)
-				if self.invincible > 0 then
+				if self.invincible > 0 or self.death_timer > 0 then
 					return
 				end
 				self.health = self.health - 1
-				self.invincible = 90
 				sfx(16)
 				if self.health <= 0 then
-					self.lives = self.lives - 1
-					if self.lives < 0 then
-						upd = noop
-						drw = draw_game_over
-						--todo probably unnecessary
-						self.lives = 0
-					else
-						self.health = 8
-					end
+					self.death_timer = 120
+				else
+					self.invincible = 90
 				end
 			end
 		}
@@ -113,7 +127,7 @@ function draw_hud()
 		spr(s, x * 8, y * 8)
 	end
 
-	--print('mem:'..stat(0), 1, 110, 7)
-	--print('cpu:'..stat(1), 1, 120, 7)
+	print("mem:" .. stat(0), 1, 110, 7)
+	print("cpu:" .. stat(1), 1, 120, 7)
 	pal()
 end
