@@ -79,7 +79,7 @@ function make_enemy(x, y)
 					make_bullet(self.x, self.y, d)
 				end
 
-				local cand, i = {}
+				local cand, same_dir_di, i = {}
 				for i = 0, 3 do
 					local dx, dy = dirx[i + 1], diry[i + 1]
 
@@ -88,23 +88,23 @@ function make_enemy(x, y)
 						-- passable
 						local di = {d = i, dx = dx, dy = dy}
 						add(cand, di)
-						if d == self.d then
-							-- slight preference for current dir
-							add(cand, di)
+						if i == self.d then
+							same_dir_di = di
 						end
 					end
 				end
 
 				local di = rnd(cand)
+				if #cand == 2 and same_dir_di then
+					-- if only two directions
+					-- and you can keep going in the current direction
+					-- then continue in the same direction
+					di=same_dir_di
+				end
+
 				self.d = di.d
 				self.t = 0
 				self:start_walk(di.dx, di.dy)
-
-				--make_bullet(dir,self.x,self.y)
-			end,
-			walk = function(self)
-				self.ox = self.sox * (1 - self.t)
-				self.oy = self.soy * (1 - self.t)
 			end,
 			draw = function(self)
 				palt(0, false)
