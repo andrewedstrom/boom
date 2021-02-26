@@ -113,6 +113,7 @@ function make_enemy(x, y)
 			draw = function(self)
 				palt(0, false)
 				palt(4, true)
+				pal(9,11)
 
 				local sprite = animate(self.dir_sprs[self.d + 1])
 				if self.dying then
